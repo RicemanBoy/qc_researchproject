@@ -6,6 +6,10 @@
 		{
 			"name": "qc_researchproject",
 			"path": "."
+		},
+		{
+			"name": "Bachelor",
+			"path": "../../../Bachelor/VSCode/Bachelor"
 		}
 	],
 	"settings": {}
