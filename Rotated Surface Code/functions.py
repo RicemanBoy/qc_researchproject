@@ -791,27 +791,32 @@ def gen_data(name, pmax, npoints, shots):
         
         qc = rot_surf_code(2)
         ancilla = qc.num_qubits - 3
-        qc = QEC(qc, pos= 0, hadamard=False, iterations = 1)
-        qc = QEC(qc, pos= 1, hadamard=False, iterations = 1)
-        qc = X_L(qc, False, n = 1)
-        qc = QEC(qc, pos= 1, hadamard=False, iterations = 1)
-        qc = Hadamard(qc, pos=0)
-        qc = QEC(qc, pos= 0, hadamard=True, iterations = 1)
-        qc = control_Z_L(qc,control=0,target=1)
-        qc = QEC(qc, pos= 0, hadamard=True, iterations = 1)
-        qc = QEC(qc, pos= 1, hadamard=False, iterations = 1)
-        qc = Hadamard(qc ,pos=0)
+        qc = X_L(qc, n = 1)
+        qc = Hadamard(qc, 0)
 
-        qc = QEC(qc, pos= 0, hadamard=False, iterations = 1)
+        #qc = control_S_L(qc,"10",control = 0, target = 1)
+
+        qc = T_L(qc, had=True, pos=0)
+        qc = T_L(qc, had=False, pos=1)
+
+        qc = QEC(qc, True, pos = 0, iterations=1)
+        qc = QEC(qc, False, pos = 1, iterations=1)
+
+        qc = CNOT(qc, hadamard="10",control=0)
+        qc = adjoint_T_L(qc,had=False,pos=1)
+        qc = CNOT(qc, hadamard="10",control=0)
+        qc = adjoint_S_L(qc, had=True, pos = 0)
+        qc = Hadamard(qc, 0)
+
+        qc = QEC(qc, False, pos = 0, iterations=1)
 
         qc.reset(ancilla)
-
-        qc = Z_parity(qc,hadamard = False,pos=0)
+        qc = Z_parity(qc, pos = 0)
 
         qc.measure(ancilla,3)
 
         sim = AerSimulator()
-        job = sim.run(qc, noise_model = noise_model, shots=shots)
+        job = sim.run(qc, noise_model=noise_model, shots=shots)
         result = job.result()
         counts = result.get_counts()
 
@@ -821,22 +826,24 @@ def gen_data(name, pmax, npoints, shots):
 
         success  =  0
         for j in range(len(x_old)):
-            if x_old[j] == "1":
+            if x_old[j] == "0":
                 success += y_old[j]
+                
         Erfolgsrate = success/shots
         y.append(Erfolgsrate)
         ######################################## Nochmal aber ohne QEC
         qc = rot_surf_code(2)
         ancilla = qc.num_qubits - 3
-
-        qc = X_L(qc, False, n = 1)
-        qc = Hadamard(qc, pos=0)
-        qc = control_Z_L(qc,control=0,target=1)
-        qc = Hadamard(qc ,pos=0)
+        qc = X_L(qc, n = 1)
+        qc = Hadamard(qc, 0)
+        qc = control_S_L(qc,"10",control = 0, target = 1)
+        qc = adjoint_S_L(qc, had=True, pos = 0)
+        qc = Hadamard(qc, 0)
         qc.reset(ancilla)
-        qc = Z_parity(qc,hadamard = False,pos=0)
-        qc.measure(ancilla,3)
+        qc = Z_parity(qc, pos = 0)
 
+        qc.measure(ancilla,3)
+        
         sim = AerSimulator()
         job = sim.run(qc, noise_model = noise_model, shots=shots)
         result = job.result()
@@ -848,11 +855,11 @@ def gen_data(name, pmax, npoints, shots):
 
         success  =  0
         for j in range(len(x_old)):
-            if x_old[j] == "1":
+            if x_old[j] == "0":
                 success += y_old[j]
 
         Erfolgsrate = success/shots
         y_no_QEC.append(Erfolgsrate)
 
     data = np.array((x,y,y_no_QEC))
-    np.savetxt("dat_idealQEC{}.txt".format(name), data, delimiter=",")
+    np.savetxt("dat_idealQEC_2nd{}.txt".format(name), data, delimiter=",")
